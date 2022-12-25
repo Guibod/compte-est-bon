@@ -2,14 +2,19 @@
 #include <stdlib.h>
 #include <string.h>
 
-
 int resolution(int *sample, int nb, int target, char **operations);
 int *cloneIntArray(int const *src, size_t len);
+int parseFile(char* fname, int *nb, int *target, int *sample);
 
 int main() {
-  int nb = 6;
-  int sample[6] = {10, 1, 25, 9, 3, 6};
-  int target = 595;
+  int nb, target;
+  int* sample = NULL;
+  sample = malloc(sizeof(int));
+
+  int ret = parseFile("/Users/gboddaert/CLionProjects/compte-est-bon/files/jeu6-1.txt", &nb, &target, sample);
+  if (ret != 0) {
+    return ret;
+  }
 
   char **operations = malloc((nb + 4) * sizeof *operations);
   int i;
@@ -107,4 +112,39 @@ int *cloneIntArray(int const *src, size_t len) {
   int *p = malloc(len * sizeof(int));
   memcpy(p, src, len * sizeof(int));
   return p;
+}
+
+int parseFile(char* fname, int *nb, int *target, int *sample) {
+  if(fname == NULL || nb == NULL || target == NULL
+      || sample == NULL) {
+    return -1;
+  }
+
+  // Opening file in reading mode
+  FILE *fp = fopen(fname, "r");
+  if (NULL == fp) {
+    printf("file %s can't be opened \n", fname);
+    return -1;
+  }
+
+  if(fscanf(fp, "%d", nb) != 1)
+  {
+    fprintf(stderr, "Wrong format, expecting nb\n");
+    fclose(fp);
+    return -1;
+  }
+
+  int i;
+  for (i=0; i < *nb; ++i) {
+    fscanf(fp, "%d", &sample[i]);
+  }
+
+  if(fscanf(fp, "%d", target) != 1)
+  {
+    fprintf(stderr, "Wrong format, expecting target\n");
+    fclose(fp);
+    return -1;
+  }
+  fclose(fp);
+  return 0;
 }
