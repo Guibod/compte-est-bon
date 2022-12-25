@@ -1,15 +1,36 @@
 #include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
 
 int resolution(int* tirage, int nb, int cible, char** operations);
+int * intdup(int const * src, size_t len);
+
 
 int main() {
     int nb = 6;
     int tirage[6] = {10, 1, 25, 9, 3, 6};
     int cible = 595;
-    char *operations[] = { "+", "-", "/", "*" };
+//    int nb = 3;
+//    int tirage[3] = {10, 1, 2};
+//    int cible = 8;
+//    int nb = 2;
+//    int tirage[2] = {10, 2};
+//    int cible = 20;
+
+    char **operations = malloc((nb + 4) * sizeof *operations);
+    int i;
+    if (operations)
+        for (i = 0; i < (nb+4); i++)
+            operations[i] = malloc(256 * sizeof *operations[i]);
+    operations[0] = "+";
+    operations[1] = "-";
+    operations[2] = "/";
+    operations[3] = "*";
 
     int res = resolution(tirage, nb, cible, operations);
-    printf("%d", res);
+    for (i=nb + 4 - 1; i > 4; --i) {
+        printf("%s\n", operations[i]);
+    }
     return 0;
 }
 
@@ -27,35 +48,41 @@ int resolution(int* tirage, int nb, int cible, char** operations) {
             // Pour tout les 4 op´erations
             for (k=0; k < 4; ++k) {
                 // Sauvegarder l’´etat du tableau tirage
-                int* backup = tirage;
-                int resultat;
-                // Effectuer le calcul tirage[i] operation tirage[j]
-                if (operations[k] == "+") {
-                    resultat = tirage[i] + tirage[j];
-                } else if (operations[k] == "-") {
-                    resultat = tirage[i] - tirage[j];
-                } else if (operations[k] == "/") {
-                    resultat = tirage[i] / tirage[j];
-                } else if (operations[k] == "*") {
-                    resultat = tirage[i] * tirage[j];
-                }
-                // Mettre le r´esultat dans tirage[i]
-                tirage[i] = resultat;
+                int* backup = intdup(tirage, nb);
 
-                // tirage[j] est utilis´e et maintenant interdit
+                int res;
+                char op = operations[k][0];
+                int val1 = tirage[i];
+                int val2 = tirage[j];
+
+                // Effectuer le calcul tirage[i] operation tirage[j]
+                if (strcmp(operations[k],"+") == 0) {
+                    res = tirage[i] + tirage[j];
+                } else if (strcmp(operations[k],"-") == 0) {
+                    res = tirage[i] - tirage[j];
+                } else if (strcmp(operations[k],"/") == 0) {
+                    res = tirage[i] / tirage[j];
+                } else if (strcmp(operations[k],"*") == 0) {
+                    res = tirage[i] * tirage[j];
+                }
+
+                // Mettre le r´esultat dans tirage[i]
+                tirage[i] = res;
+
                 // Mettre le dernier nombre non utilis´e tirage[nb − 1] `a la place de tirage[j]
                 tirage[j] = tirage[nb - 1];
 
                 // Si le r´esultat est la cible OU resolution(tirage, nb-1, cible, operations) == 0 Alors
-                if (resultat == cible || resolution(tirage, nb-1, cible, operations) == 0) {
+                if (res == cible || resolution(tirage, nb-1, cible, operations) == 0) {
                     tirage = backup;
-                    operations += &"fufuu";
+                    sprintf(operations[nb + 4 - 1], "%d %c %d = %d", val1, op, val2, res);
                     return 0;
                 }
+
                 tirage = backup;
-                printf("%d %s %d\n", tirage[i], operations[k], tirage[j]);
             }
         }
+        return 1;
     }
 //    10: //On a trouv´e une solution, soit imm´ediatement (resultat=cible)
 //    11: //soit en continuant les op´erations avec les nb-1 nombres restants
@@ -72,4 +99,11 @@ int resolution(int* tirage, int nb, int cible, char** operations) {
 //    22: Fin Pour
 //    23: //Aucune solution possible si on arrive ici
 //    24: return 1 ;
+}
+
+int * intdup(int const * src, size_t len)
+{
+    int * p = malloc(len * sizeof(int));
+    memcpy(p, src, len * sizeof(int));
+    return p;
 }
