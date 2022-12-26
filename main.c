@@ -42,9 +42,9 @@ int main(int argc, char *argv[]) {
     for (i = 0; i < (nb + 4); i++)
       operations[i] = malloc(256 * sizeof *operations[i]);
   operations[0] = "+";
-  operations[1] = "-";
+  operations[1] = "*";
   operations[2] = "/";
-  operations[3] = "*";
+  operations[3] = "-";
 
   printProblem(nb, target, sample);
   int res = resolutionBest(sample, nb, target, minDistance, operations);
@@ -95,6 +95,9 @@ int resolution(int *sample, int nb, int target, char **operations) {
         int val1 = sample[i];
         int val2 = sample[j];
         int res = compute(sample[i], sample[j], operations[k]);
+        if (res < 0) {
+          continue;
+        }
 
         // Mettre le r´esultat dans sample[i]
         sample[i] = res;
@@ -240,9 +243,15 @@ int parseFile(char* fname, int *nb, int *target, int *sample) {
 }
 
 int* randomSample(int nb) {
-  int i, j;
   int* sample = NULL;
   sample = malloc(sizeof(int));
+  if (nb > 24) {
+    fprintf(stderr, "Cannot provide a sample of more than 24 numbers, %d requested", nb);
+    return sample;
+  }
+
+  int i, j;
+
   int items[24] = {
     1, 1, 2, 2, 3, 3,
     4, 4, 5, 5, 6, 6,
@@ -281,10 +290,22 @@ int compute(int a, int b, char* op) {
   }
 
   if (strcmp(op, "/") == 0) {
+    if (a % b != 0) {
+      return -1;
+    }
+
+    if (a == 1 || b == 1) {
+      return -1;
+    }
+
     return a / b;
   }
 
   if (strcmp(op, "*") == 0) {
+    if (b == 1 || a == 1) {
+      return -1;
+    }
+
     return a * b;
   }
 
