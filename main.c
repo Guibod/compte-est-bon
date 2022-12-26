@@ -9,6 +9,7 @@ int* cloneIntArray(int const *src, size_t len);
 int parseFile(char* fname, int *nb, int *target, int *sample);
 int* randomSample(int nb);
 void printProblem(int nb, int target, int* sample);
+int compute(int a, int b, char* operator);
 
 int main(int argc, char *argv[]) {
   int nb, target;
@@ -90,21 +91,10 @@ int resolution(int *sample, int nb, int target, char **operations) {
         // Sauvegarder l’´etat du tableau sample
         int *backup = cloneIntArray(sample, nb);
 
-        int res = -1;
         char op = operations[k][0];
         int val1 = sample[i];
         int val2 = sample[j];
-
-        // Effectuer le calcul sample[i] operation sample[j]
-        if (strcmp(operations[k], "+") == 0) {
-          res = sample[i] + sample[j];
-        } else if (strcmp(operations[k], "-") == 0) {
-          res = sample[i] - sample[j];
-        } else if (strcmp(operations[k], "/") == 0) {
-          res = sample[i] / sample[j];
-        } else if (strcmp(operations[k], "*") == 0) {
-          res = sample[i] * sample[j];
-        }
+        int res = compute(sample[i], sample[j], operations[k]);
 
         // Mettre le r´esultat dans sample[i]
         sample[i] = res;
@@ -153,20 +143,14 @@ int resolutionBest(int *sample, int nb, int target, int minDistance, char **oper
         // Sauvegarder l’´etat du tableau sample
         int *backup = cloneIntArray(sample, nb);
 
-        int res = -1;
         char op = operations[k][0];
         int val1 = sample[i];
         int val2 = sample[j];
 
-        // Effectuer le calcul sample[i] operation sample[j]
-        if (strcmp(operations[k], "+") == 0) {
-          res = sample[i] + sample[j];
-        } else if (strcmp(operations[k], "-") == 0) {
-          res = sample[i] - sample[j];
-        } else if (strcmp(operations[k], "/") == 0) {
-          res = sample[i] / sample[j];
-        } else if (strcmp(operations[k], "*") == 0) {
-          res = sample[i] * sample[j];
+        int res = compute(sample[i], sample[j], operations[k]);
+
+        if (res < 0) {
+          continue;
         }
 
         // Mettre le r´esultat dans sample[i]
@@ -285,4 +269,24 @@ void printProblem(int nb, int target, int* sample) {
     printf("  - %d\n", sample[i]);
   }
   printf("==============================\n\n");
+}
+
+int compute(int a, int b, char* op) {
+  if (strcmp(op, "+") == 0) {
+    return a + b;
+  }
+
+  if (strcmp(op, "-") == 0) {
+    return a - b;
+  }
+
+  if (strcmp(op, "/") == 0) {
+    return a / b;
+  }
+
+  if (strcmp(op, "*") == 0) {
+    return a * b;
+  }
+
+  return -1;
 }
