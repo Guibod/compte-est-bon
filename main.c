@@ -4,6 +4,7 @@
 #include <time.h>
 
 int resolution(int *sample, int nb, int target, char **operations);
+int resolutionBest(int *sample, int nb, int target, int minDistance, char **operations);
 int* cloneIntArray(int const *src, size_t len);
 int parseFile(char* fname, int *nb, int *target, int *sample);
 int* randomSample(int nb);
@@ -11,6 +12,7 @@ void printProblem(int nb, int target, int* sample);
 
 int main(int argc, char *argv[]) {
   int nb, target;
+  int minDistance = 999999;
   int* sample = NULL;
   sample = malloc(sizeof(int));
 
@@ -44,9 +46,17 @@ int main(int argc, char *argv[]) {
   operations[3] = "*";
 
   printProblem(nb, target, sample);
-  int res = resolution(sample, nb, target, operations);
+  int res = resolutionBest(sample, nb, target, minDistance, operations);
   if (res == 0) {
     printf("Une solution au problème a été trouvée !\n");
+    for (i = nb + 4 - 1; i > 4; --i) {
+      printf("%s\n", operations[i]);
+    }
+    return 0;
+  }
+
+  else if (res) {
+    printf("Une solution approximative a été trouvée à une distance de %d:\n", res);
     for (i = nb + 4 - 1; i > 4; --i) {
       printf("%s\n", operations[i]);
     }
@@ -117,6 +127,85 @@ int resolution(int *sample, int nb, int target, char **operations) {
     }
   }
   return 1;
+
+}
+
+/**
+ * @param sample
+ * @param nb
+ * @param target
+ * @param operations
+ * @return int
+ */
+int resolutionBest(int *sample, int nb, int target, int minDistance, char **operations) {
+  int i, j, k;
+  // tout les nombres sample[i] Faire
+  for (i = 0; i < nb; ++i) {
+    // Pour tout les nombres sample[j] Faire
+    for (j = 0; j < nb; ++j) {
+      // avec i! = j
+      if (i == j) {
+        continue;
+      }
+
+      // Pour tout les 4 op´erations
+      for (k = 0; k < 4; ++k) {
+        // Sauvegarder l’´etat du tableau sample
+        int *backup = cloneIntArray(sample, nb);
+
+        int res = -1;
+        char op = operations[k][0];
+        int val1 = sample[i];
+        int val2 = sample[j];
+
+        // Effectuer le calcul sample[i] operation sample[j]
+        if (strcmp(operations[k], "+") == 0) {
+          res = sample[i] + sample[j];
+        } else if (strcmp(operations[k], "-") == 0) {
+          res = sample[i] - sample[j];
+        } else if (strcmp(operations[k], "/") == 0) {
+          res = sample[i] / sample[j];
+        } else if (strcmp(operations[k], "*") == 0) {
+          res = sample[i] * sample[j];
+        }
+
+        // Mettre le r´esultat dans sample[i]
+        sample[i] = res;
+
+        // Mettre le dernier nombre non utilis´e sample[nb − 1] `a la place de
+        // sample[j]
+        sample[j] = sample[nb - 1];
+
+        if (minDistance > abs(target - res)) {
+          minDistance = abs(target - res);
+          sprintf(operations[nb + 4 - 1], "%d %c %d = %d", val1, op, val2, res);
+        }
+
+        // Si le r´esultat est la target OU resolution(sample, nb-1, target,
+        // operations) == 0 Alors
+        if (res == target) {
+          sample = backup;
+          sprintf(operations[nb + 4 - 1], "%d %c %d = %d", val1, op, val2, res);
+          return 0;
+        }
+
+        int val;
+        val = resolutionBest(sample, nb - 1, target, minDistance, operations);
+        if (val == NULL) {
+          sample = backup;
+          sprintf(operations[nb + 4 - 1], "%d %c %d = %d", val1, op, val2, res);
+          return 0;
+        }
+
+        if (abs(val) < abs(minDistance)) {
+          minDistance = val;
+        }
+
+        sample = backup;
+      }
+    }
+  }
+  return minDistance;
 }
 
 /**
